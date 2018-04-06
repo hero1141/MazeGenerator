@@ -1,4 +1,5 @@
 import { Component, ViewChild, AfterViewInit } from '@angular/core';
+import { Point } from './point/point.model';
 
 @Component({
   selector: 'app-root',
@@ -10,6 +11,7 @@ export class AppComponent implements AfterViewInit {
   tiles = [];
   visitedStk = [];
   @ViewChild("mazeCanvas") canvas;
+  mazeSize: number = 40;
 
   constructor() {
 
@@ -52,7 +54,7 @@ export class AppComponent implements AfterViewInit {
     let right = tile.right;
     let top = tile.top;
     let bottom = tile.bottom;
-    let size = 25;
+    let size = this.mazeSize;
     this.ctx.beginPath();
     if (left) {
       this.drawLine(x, y, x, y + size);
@@ -74,11 +76,11 @@ export class AppComponent implements AfterViewInit {
 
   drawBase() {
     /* Draw the tiles on the canvas*/
-    let side = 25;
+    let side = this.mazeSize;
     for (let i = 0; i < 20; i++) {
       this.tiles[i] = [];
       for (let j = 0; j < 20; j++) {
-        this.tiles[i].push(this.createPoint(i, j));
+        this.tiles[i].push(new Point(i, j));
         this.drawCell(i * side, j * side, side, this.tiles[i][j]);
       }
     }
@@ -92,10 +94,10 @@ export class AppComponent implements AfterViewInit {
   redrawTiles() {
     let currentTile;
     this.clearCanvas();
-    let side = 25;
+    let side = this.mazeSize;
     for (let i = 0; i < 20; i++) {
       for (let j = 0; j < 20; j++) {
-        currentTile = this.tiles[i][j];
+        currentTile = this.tiles[j][i];
         this.drawCell(i * side, j * side, side, currentTile);
       }
     }
@@ -125,6 +127,7 @@ export class AppComponent implements AfterViewInit {
     }
     /*If a neighbor is found*/
     else if (neighbor !== undefined) {
+
       /*Break the wall in between*/
       if (neighbor.row > currentTile.row) { /*Bottom*/
         currentTile.bottom = false;
@@ -199,12 +202,4 @@ export class AppComponent implements AfterViewInit {
     /*Return, will return undefined if no neighbor is found*/
     return neighbor;
   }
-
-
-
-
-
-
-
-
 }

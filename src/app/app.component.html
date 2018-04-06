@@ -1,12 +1,16 @@
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2" style="margin-top:10px;">
+        <button
+          id="newMazeBtn"
+          (click)="reDrawMaze()"
+          class="btn btn-lg btn-success">New Maze</button>
+    </div>
+    <div class="col-md-10" style="margin-top:10px;">
+      <div id="maze" style="width:500px; margin:0 auto;">
+        <canvas #mazeCanvas width="850" height="850"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
 
-<div id="maze" style="width:500px; margin:0 auto;">
-  <canvas #mazeCanvas width="550" height="550"></canvas>
-</div>
-<div id="buttons">
-  <hr />
-  <button
-    id="newMazeBtn"
-    (click)="reDrawMaze()">New Maze</button>
-  <button id="aboutBtn">About</button>
-</div>
