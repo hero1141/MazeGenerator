@@ -5,12 +5,15 @@
           id="newMazeBtn"
           (click)="reDrawMaze()"
           class="btn btn-lg btn-success">New Maze</button>
+      <hr>
+      HP: {{ hp }}
     </div>
     <div class="col-md-10" style="margin-top:10px;">
-      <div id="maze" style="width:500px; margin:0 auto;">
+      <div id="maze" style="width:500px;">
         <canvas #mazeCanvas width="850" height="850"></canvas>
       </div>
     </div>
   </div>
+  {{ foods }}
 </div>
 

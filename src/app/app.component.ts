@@ -1,5 +1,8 @@
 import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { Point } from './point/point.model';
+import { Human } from './charsets/human.model';
+import { Food } from './charsets/food.model';
+import { Zombie } from './charsets/zombie.model';
 
 @Component({
   selector: 'app-root',
@@ -10,9 +13,15 @@ export class AppComponent implements AfterViewInit {
   ctx;
   tiles = [];
   visitedStk = [];
-  @ViewChild("mazeCanvas") canvas;
-  mazeSize: number = 40;
-
+  @ViewChild('mazeCanvas') canvas;
+  mazeSize = 40;
+  x = 20;
+  y = 20;
+  foods: Food[] = [];
+  zombies: Zombie[] = [];
+  percentageOfFood = 0.1;
+  percentageOfZombie = 0.02;
+  hp = 100;
   constructor() {
 
   }
@@ -22,23 +31,10 @@ export class AppComponent implements AfterViewInit {
     this.init();
   }
 
-
-   createPoint(nRow, nCol) {
-    /*Cell class*/
-    return {
-      row: nRow,
-      col: nCol,
-      visited: false,
-      left: true,
-      right: true,
-      top: true,
-      bottom: true
-    };
-  }
-
   init() {
     /*Initialize needed variables. */
-    this.ctx = this.canvas.getContext("2d");
+    this.ctx = this.canvas.getContext('2d');
+    this.respawnObjects();
     this.drawBase();
   }
 
@@ -50,11 +46,11 @@ export class AppComponent implements AfterViewInit {
 
   drawCell(x, y, side, tile) {
     /* Draw cell based on wall properties */
-    let left = tile.left;
-    let right = tile.right;
-    let top = tile.top;
-    let bottom = tile.bottom;
-    let size = this.mazeSize;
+    const left = tile.left;
+    const right = tile.right;
+    const top = tile.top;
+    const bottom = tile.bottom;
+    const size = this.mazeSize;
     this.ctx.beginPath();
     if (left) {
       this.drawLine(x, y, x, y + size);
@@ -65,7 +61,7 @@ export class AppComponent implements AfterViewInit {
     }
 
     if (bottom) {
-      this.drawLine(x, y + size, x + size, y + size)
+      this.drawLine(x, y + size, x + size, y + size);
     }
 
     if (top) {
@@ -76,10 +72,10 @@ export class AppComponent implements AfterViewInit {
 
   drawBase() {
     /* Draw the tiles on the canvas*/
-    let side = this.mazeSize;
-    for (let i = 0; i < 20; i++) {
+    const side = this.mazeSize;
+    for (let i = 0; i < this.x; i++) {
       this.tiles[i] = [];
-      for (let j = 0; j < 20; j++) {
+      for (let j = 0; j < this.y; j++) {
         this.tiles[i].push(new Point(i, j));
         this.drawCell(i * side, j * side, side, this.tiles[i][j]);
       }
@@ -94,9 +90,9 @@ export class AppComponent implements AfterViewInit {
   redrawTiles() {
     let currentTile;
     this.clearCanvas();
-    let side = this.mazeSize;
-    for (let i = 0; i < 20; i++) {
-      for (let j = 0; j < 20; j++) {
+    const side = this.mazeSize;
+    for (let i = 0; i < this.x; i++) {
+      for (let j = 0; j < this.y; j++) {
         currentTile = this.tiles[j][i];
         this.drawCell(i * side, j * side, side, currentTile);
       }
@@ -105,29 +101,28 @@ export class AppComponent implements AfterViewInit {
 
   reDrawMaze() {
     /*Button Handle for 'New Maze' */
-    let startCol = Math.floor(Math.random() * 10) - 1;
-    let startRow = Math.floor(Math.random() * 10) - 1;
+    const startCol = Math.floor(Math.random() * 10) - 1;
+    const startRow = Math.floor(Math.random() * 10) - 1;
     this.clearCanvas();
+    this.respawnObjects();
     this.drawBase();
   }
 
   generateMaze(row, col) {
     /* Depth First Search*/
     let currentTile = this.tiles[row][col];
-    let neighbor = this.findNeighbor(row, col);
+    const neighbor = this.findNeighbor(row, col);
     /*Check if cell has been visited */
     if (!currentTile.visited) {
       currentTile.visited = true;
       this.visitedStk.push(currentTile);
     }
     /* Break Case */
-    if (this.visitedStk.length == 0) {
+    if (this.visitedStk.length === 0) {
       this.redrawTiles();
       return;
-    }
+    } else if (neighbor !== undefined) {
     /*If a neighbor is found*/
-    else if (neighbor !== undefined) {
-
       /*Break the wall in between*/
       if (neighbor.row > currentTile.row) { /*Bottom*/
         currentTile.bottom = false;
@@ -147,10 +142,9 @@ export class AppComponent implements AfterViewInit {
       }
       /*Update Current Tile*/
       currentTile = neighbor;
-    }
+    } else {
     /*If no neighbor was found, backtrack to a previous cell on the stacke*/
-    else {
-      let backtrack = this.visitedStk.pop();
+      const backtrack = this.visitedStk.pop();
       this.generateMaze(backtrack.row, backtrack.col);
       currentTile = backtrack;
     }
@@ -201,5 +195,32 @@ export class AppComponent implements AfterViewInit {
     }
     /*Return, will return undefined if no neighbor is found*/
     return neighbor;
+  }
+  respawnObjects() {
+    const human = new Human(5, 5, '../assets/images/baby.png');
+    human.data.onload = () => {
+      this.ctx.drawImage(human.data, 5, 5);
+    };
+    this.generateFood();
+    this.generateZombies();
+  }
+  generateFood() {
+    for (let i = 0; i < Math.floor(this.x * this.y * this.percentageOfFood) ; i++) {
+      const food = new Food(Math.floor(Math.random() * this.x +  1), Math.floor(Math.random() * this.y + 1 ));
+      this.foods.push(food);
+      food.data.onload = () => {
+        this.ctx.drawImage(food.data, this.mazeSize * food.x - this.mazeSize + 5, this.mazeSize * food.y - this.mazeSize + 5);
+      };
+    }
+  }
+
+  generateZombies() {
+    for (let i = 0; i < Math.floor(this.x * this.y  * this.percentageOfZombie) ; i++) {
+      const zombie = new Zombie(Math.floor(Math.random() * this.x +  1), Math.floor(Math.random() * this.y + 1 ));
+      this.zombies.push(zombie);
+      zombie.data.onload = () => {
+        this.ctx.drawImage(zombie.data, this.mazeSize * zombie.x - this.mazeSize + 5, this.mazeSize * zombie.y - this.mazeSize + 5);
+      };
+    }
   }
 }
