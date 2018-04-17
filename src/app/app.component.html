@@ -1,19 +1,77 @@
 <div class="container-fluid">
   <div class="row">
-    <div class="col-md-2" style="margin-top:10px;">
-        <button
-          id="newMazeBtn"
-          (click)="reDrawMaze()"
-          class="btn btn-lg btn-success">New Maze</button>
+    <div class="col-md-4" style="margin-top:10px;">
+      <h1>
+        HP: {{ hp }} X: {{ human.x }}  Y: {{ human.y }}
+      </h1>
+      <h2>
+        <button (click)="changeX(-1)" [disabled]="x < 7" class="btn btn-danger">-</button>
+        X: {{ x }}
+        <button (click)="changeX(1)" [disabled]="x > 19" class="btn btn-success">+</button>
+      </h2>
+      <h2>
+        <button (click)="changeY(-1)" [disabled]="y < 7" class="btn btn-danger">-</button>
+        Y: {{ y }}
+        <button (click)="changeY(1)" [disabled]="y > 19" class="btn btn-success">+</button>
+      </h2>
+      <h2>
+        <button (click)="setPercentageOfZombies(-1)" [disabled]="percentageOfZombie < 0.01" class="btn btn-danger">-1</button>
+        <button (click)="setPercentageOfZombies(-5)" [disabled]="percentageOfZombie < 0.05" class="btn btn-danger">-5</button>
+        Zombies: {{ percentageOfZombie * 100 | number }}%
+        <button (click)="setPercentageOfZombies(1)" [disabled]="percentageOfZombie > 0.99" class="btn btn-success">+1</button>
+        <button (click)="setPercentageOfZombies(5)" [disabled]="percentageOfZombie > 0.94" class="btn btn-success">+5</button>
+      </h2>
+      <h2>
+        <button (click)="setPercentageOfFoods(-1)" [disabled]="percentageOfFood < 0.01" class="btn btn-danger">-1</button>
+        <button (click)="setPercentageOfFoods(-5)" [disabled]="percentageOfFood < 0.05" class="btn btn-danger">-5</button>
+        Foods: {{ percentageOfFood * 100 | number }}%
+        <button (click)="setPercentageOfFoods(1)" [disabled]="percentageOfFood > 0.99" class="btn btn-success">+1</button>
+        <button (click)="setPercentageOfFoods(5)" [disabled]="percentageOfFood > 0.94" class="btn btn-success">+5</button>
+      </h2>
+
+
       <hr>
-      HP: {{ hp }}
+      <button
+        id="newMazeBtn"
+        (click)="reDrawMaze()"
+        class="btn btn-lg btn-success">New Maze</button>
+
+      <button
+        id="startSimulationBtn"
+        (click)="startSimulation()"
+        class="btn btn-lg btn-primary">Start Simulation</button>
+      <h2>Visited Stack</h2>
+      <table class="table">
+        <thead>
+        <tr>
+          <th>Nr</th>
+          <th>X</th>
+          <th>Y</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let stack of human.visitedTiles">
+          <td>1</td>
+          <td>{{ stack  .x }}</td>
+          <td>{{ stack.y }}</td>
+        </tr>
+        </tbody>
+      </table>
     </div>
-    <div class="col-md-10" style="margin-top:10px;">
+    <div class="col-md-8" style="margin-top:10px;">
       <div id="maze" style="width:500px;">
         <canvas #mazeCanvas width="850" height="850"></canvas>
       </div>
     </div>
+
   </div>
-  {{ foods }}
+  <div class="row">
+    <div class="col-md-6">
+
+    </div>
+  </div>
 </div>
+
+
+
 
