@@ -27,11 +27,21 @@ export class AppComponent implements AfterViewInit {
   time = 100;
   howManyDiedLastIteration = 0;
   clearInterval = false;
+  simulation = false;
   constructor() {}
 
   ngAfterViewInit() {
     this.canvas = this.canvas.nativeElement;
     this.init();
+  }
+
+  stopSimulation() {
+    this.simulation = false;
+  }
+
+  start() {
+    this.simulation = true;
+    this.startSimulation();
   }
 
   init() {
@@ -407,6 +417,8 @@ export class AppComponent implements AfterViewInit {
       index = index - 1;
     }
   }
+
+
     
 
 
@@ -416,24 +428,28 @@ export class AppComponent implements AfterViewInit {
     //   human.way.push(this.tiles[human.y][human.x]);
     // });
     const interval = setInterval(() => {
-      if (this.clearInterval) {
-        this.clearInterval = false;
+      if (!this.simulation) {
         clearInterval(interval);
-        this.startSimulation();
-      }
-      if (this.endOfIteration()) {
-        clearInterval(interval);
-        this.newIteration();
       } else {
-        console.log(this.humans);
-        this.selectTile();
-        this.humans.forEach((human) => {
-          if (human.x !== this.x - 1 || human.y !== this.y - 1) {
-            human.changeHp(this.x, this.y);
-            this.checkIfYouAreDead(human);
-          }
-        });
-        this.refreshMaze();
+        if (this.clearInterval) {
+          this.clearInterval = false;
+          clearInterval(interval);
+          this.startSimulation();
+        }
+        if (this.endOfIteration()) {
+          clearInterval(interval);
+          this.newIteration();
+        } else {
+          console.log(this.humans);
+          this.selectTile();
+          this.humans.forEach((human) => {
+            if (human.x !== this.x - 1 || human.y !== this.y - 1) {
+              human.changeHp(this.x, this.y);
+              this.checkIfYouAreDead(human);
+            }
+          });
+          this.refreshMaze();
+        } 
       }
     }, this.time);
   }
@@ -526,7 +542,7 @@ export class AppComponent implements AfterViewInit {
     this.foods.forEach((food) => {
       if (human.x === food.x && human.y === food.y) {
         this.humans.forEach((human) => {
-          human.hp = human.hp + 50 > 100 ? 100 : human.hp + 50;
+          human.hp = 100;
         });      
       }
     });

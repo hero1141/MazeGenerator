@@ -46,8 +46,15 @@
 
       <button
         id="startSimulationBtn"
-        (click)="startSimulation()"
+        (click)="start()"
+        *ngIf="!simulation"
         class="btn btn-lg btn-primary">Start Simulation</button>
+      <button 
+        (click)="stopSimulation()"
+        *ngIf="simulation"
+        class="btn btn-lg btn-warning">
+        Stop Simulation
+      </button>
       <h2>Visited Stack</h2>
       {{howManyDiedLastIteration}}
     </div>
