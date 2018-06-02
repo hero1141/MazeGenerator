@@ -2,7 +2,6 @@
   <div class="row">
     <div class="col-md-4" style="margin-top:10px;">
       <h1>
-        HP: {{ hp }} X: {{ human.x }}  Y: {{ human.y }}
       </h1>
       <h2>
         <button (click)="changeX(-1)" [disabled]="x < 7" class="btn btn-danger">-</button>
@@ -13,6 +12,11 @@
         <button (click)="changeY(-1)" [disabled]="y < 7" class="btn btn-danger">-</button>
         Y: {{ y }}
         <button (click)="changeY(1)" [disabled]="y > 19" class="btn btn-success">+</button>
+      </h2>
+      <h2>
+        <button (click)="changeAgents(-1)" [disabled]="agents < 2" class="btn btn-danger">-</button>
+        Agents: {{ agents }}
+        <button (click)="changeAgents(1)" [disabled]="agents > 30" class="btn btn-success">+</button>
       </h2>
       <h2>
         <button (click)="setPercentageOfZombies(-1)" [disabled]="percentageOfZombie < 0.01" class="btn btn-danger">-1</button>
@@ -28,8 +32,12 @@
         <button (click)="setPercentageOfFoods(1)" [disabled]="percentageOfFood > 0.99" class="btn btn-success">+1</button>
         <button (click)="setPercentageOfFoods(5)" [disabled]="percentageOfFood > 0.94" class="btn btn-success">+5</button>
       </h2>
-
-
+      <h2>
+        <button (click)="setTime(-10)" [disabled]="time < 20" class="btn btn-danger">Slower</button>
+        Speed: {{ time }} ms
+        <button (click)="setTime(10)" [disabled]="time > 1999" class="btn btn-success">Faster</button>
+      </h2>
+      PercentageOfExploration: {{ (percentOfExploration  * 100).toFixed(2) }}%
       <hr>
       <button
         id="newMazeBtn"
@@ -41,33 +49,12 @@
         (click)="startSimulation()"
         class="btn btn-lg btn-primary">Start Simulation</button>
       <h2>Visited Stack</h2>
-      <table class="table">
-        <thead>
-        <tr>
-          <th>Nr</th>
-          <th>X</th>
-          <th>Y</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let stack of human.visitedTiles">
-          <td>1</td>
-          <td>{{ stack  .x }}</td>
-          <td>{{ stack.y }}</td>
-        </tr>
-        </tbody>
-      </table>
+      {{howManyDiedLastIteration}}
     </div>
     <div class="col-md-8" style="margin-top:10px;">
       <div id="maze" style="width:500px;">
         <canvas #mazeCanvas width="850" height="850"></canvas>
       </div>
-    </div>
-
-  </div>
-  <div class="row">
-    <div class="col-md-6">
-
     </div>
   </div>
 </div>

@@ -12,7 +12,6 @@ export class Point {
   constructor(x, y, xMax, yMax) {
     this.x = x;
     this.y = y;
-    this.cost = Math.random() * 10;
-    const rand = Math.random();
+    this.cost = 1000;
   }
 }

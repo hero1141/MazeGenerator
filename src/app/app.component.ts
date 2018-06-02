@@ -17,12 +17,16 @@ export class AppComponent implements AfterViewInit {
   mazeSize = 40;
   x = 20;
   y = 10;
+  agents = 10;
   foods: Food[] = [];
-  human = new Human(0, 0, '');
+  humans: Human[] = [];
   zombies: Zombie[] = [];
   percentageOfFood: any = 0.1;
   percentageOfZombie: any = 0.02;
-  hp = 100;
+  percentOfExploration = 1;
+  time = 100;
+  howManyDiedLastIteration = 0;
+  clearInterval = false;
   constructor() {}
 
   ngAfterViewInit() {
@@ -35,7 +39,6 @@ export class AppComponent implements AfterViewInit {
     this.ctx = this.canvas.getContext('2d');
     this.respawnObjects();
     this.drawBase();
-    console.log(this.tiles);
   }
 
   drawLine(sX, sY, eX, eY) {
@@ -66,9 +69,6 @@ export class AppComponent implements AfterViewInit {
     }
     this.ctx.stroke();
   }
-
-
-
   drawBase() {
     /* Draw the tiles on the canvas*/
     const side = this.mazeSize;
@@ -81,19 +81,17 @@ export class AppComponent implements AfterViewInit {
     }
     this.removeRandomWalls();
     this.generateMaze(0, 0);
-
-    // this.reDrawMaze();
   }
   removeRandomWalls() {
     for (let i = 0; i < this.y - 2; i++) {
       for (let j = 1; j < this.x - 2; j++) {
         let rand = Math.random();
-        if (rand < 0.45) {
+        if (rand < 0.7) {
           this.tiles[i][j].bottom = false;
           this.tiles[i + 1][j].top = false;
         }
         rand = Math.random();
-        if (rand < 0.45) {
+        if (rand < 0.7) {
           this.tiles[i][j].right = false;
           this.tiles[i][j + 1].left = false;
         }
@@ -103,7 +101,10 @@ export class AppComponent implements AfterViewInit {
   clearCanvas() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
-
+  changeAgents(val) {
+    this.agents = this.agents + val;
+    this.reDrawMaze();
+  }
   redrawTiles() {
     let currentTile;
     this.clearCanvas();
@@ -115,15 +116,22 @@ export class AppComponent implements AfterViewInit {
       }
     }
   }
+  refreshHp() {
+    this.humans.forEach((human) => {
+      human.hp = 100;
+    });
+  }
 
   reDrawMaze() {
     /*Button Handle for 'New Maze' */
-    this.hp = 100;
+    this.percentOfExploration = 1;
+    
     this.zombies = [];
     this.foods = [];
     this.clearCanvas();
-    this.respawnObjects();
     this.drawBase();
+    this.respawnObjects();
+
   }
 
   generateMaze(row, col) {
@@ -215,29 +223,37 @@ export class AppComponent implements AfterViewInit {
     return neighbor;
   }
   respawnObjects() {
-    this.human = new Human(0, 0, '../assets/images/baby.png');
-    this.human.data.onload = () => {
-      this.ctx.drawImage(this.human.data, this.mazeSize * this.human.x + 5, this.mazeSize * this.human.y + 5);
-    };
     this.generateFood();
     this.generateZombies();
+    this.humans = [];
+    for (let i = 0 ; i < this.agents ; i++) {
+      let human = new Human('../assets/images/baby.png');
+      this.getTileForHuman(human);
+      this.humans.push(human);
+      this.humans[i].data.onload = () => {
+        this.ctx.drawImage(this.humans[i].data, this.mazeSize * this.humans[i].x + 5, this.mazeSize * this.humans[i].y + 5);
+      };
+    }
+    console.log("Zombies", this.zombies);
+    console.log("Food", this.foods );
   }
   generateFood() {
     for (let i = 0; i < Math.floor(this.x * this.y * this.percentageOfFood) ; i++) {
-      const food = new Food(Math.floor(Math.random() * this.x +  1), Math.floor(Math.random() * this.y + 1 ));
+      const food = new Food(Math.floor(Math.random() * this.x ), Math.floor(Math.random() * this.y  ));
       this.foods.push(food);
       food.data.onload = () => {
-        this.ctx.drawImage(food.data, this.mazeSize * food.x - this.mazeSize + 5, this.mazeSize * food.y - this.mazeSize + 5);
+        this.ctx.drawImage(food.data, this.mazeSize * food.x  + 5, this.mazeSize * food.y  + 5);
       };
     }
   }
 
   generateZombies() {
     for (let i = 0; i < Math.floor(this.x * this.y  * this.percentageOfZombie) ; i++) {
-      const zombie = new Zombie(Math.floor(Math.random() * this.x +  1), Math.floor(Math.random() * this.y + 1 ));
+      const zombie = new Zombie();
+      this.getTileForZombie(zombie);
       this.zombies.push(zombie);
       zombie.data.onload = () => {
-        this.ctx.drawImage(zombie.data, this.mazeSize * zombie.x - this.mazeSize + 5, this.mazeSize * zombie.y - this.mazeSize + 5);
+        this.ctx.drawImage(zombie.data, this.mazeSize * zombie.x + 5, this.mazeSize * zombie.y  + 5);
       };
     }
   }
@@ -264,15 +280,17 @@ export class AppComponent implements AfterViewInit {
   }
   refreshFood() {
     this.foods.forEach((food) => {
-      this.ctx.drawImage(food.data,
-        this.mazeSize * food.x - this.mazeSize + 5,
-        this.mazeSize * food.y - this.mazeSize + 5
-      );
+      if (food.visible) {
+        this.ctx.drawImage(food.data,
+          this.mazeSize * food.x  + 5,
+          this.mazeSize * food.y  + 5
+        );
+      }
     });
   }
   refreshZombies() {
     this.zombies.forEach((zombie) => {
-      this.ctx.drawImage(zombie.data, this.mazeSize * zombie.x - this.mazeSize + 5, this.mazeSize * zombie.y - this.mazeSize + 5);
+      this.ctx.drawImage(zombie.data, this.mazeSize * zombie.x + 5, this.mazeSize * zombie.y + 5);
     });
   }
   refreshBase() {
@@ -284,73 +302,242 @@ export class AppComponent implements AfterViewInit {
     }
   }
   refreshObjects() {
-    this.ctx.drawImage(this.human.data, this.mazeSize * this.human.x + 5, this.mazeSize * this.human.y + 5);
+    this.humans.forEach((human) => {
+      if (human.isAlive) {
+        this.ctx.drawImage(human.data, this.mazeSize * human.x + 5, this.mazeSize * human.y + 5);
+      }
+    });
+    this.ctx.font = '10px Arial';
+    for (let i = 0; i < this.y; i++) {
+      for (let j = 0; j < this.x; j++) {
+        this.ctx.fillText(this.tiles[i][j].cost, this.mazeSize * this.tiles[i][j].x + 5, this.mazeSize * this.tiles[i][j].y + 25);
+      }
+    }
     this.refreshFood();
     this.refreshZombies();
   }
-  startSimulation() {
-    if (this.checkIfItsVisited(this.human, this.tiles[0][0])) {
-      this.human.visitedTiles.push(this.tiles[0][0]);
-      this.tiles.forEach((tile) => {
-        tile.visited = false;
+
+  getTileForZombie(zombie) {
+    let isOnFood = true;
+    while(isOnFood) {
+      isOnFood = false;
+      let x = Math.floor(Math.random() * (this.x));
+      let y = Math.floor(Math.random() * (this.y));
+      this.foods.forEach((food) => {
+        if (food.x === x && food.y === y) {
+          isOnFood = true;  
+        }
       });
-    }
-    const interval = setInterval(() => {
-      this.selectTile();
-      this.hp = this.hp - 2;
-      this.refreshMaze();
-      if (this.human.x === this.x - 1 && this.human.y === this.y - 1) {
-        clearInterval(interval);
+      if (!isOnFood) {
+        zombie.x = x;
+        zombie.y = y;
       }
-    }, 500);
+    }
+  }
+
+  getTileForHuman(human) {
+    let isWrongTile = true;
+    while(isWrongTile) {
+      isWrongTile = false;
+      let x = Math.floor(Math.random() * (this.x));
+      let y = Math.floor(Math.random() * (this.y));
+
+      this.zombies.forEach((zombie) => {
+        if (zombie.x === x && zombie.y === y) {
+          isWrongTile = true;  
+        }
+      });
+      this.foods.forEach((food) => {
+        if (food.x === x && food.y === y) {
+          isWrongTile = true;  
+        }
+      });
+      this.humans.forEach((human) => {
+        if (human.x === x && human.y === y) {
+          isWrongTile = true;  
+        }
+      });
+      if (!isWrongTile) {
+        human.x = x;
+        human.y = y;
+      }
+    }
+  }
+
+  newIteration() {
+    this.percentOfExploration = this.percentOfExploration >= 0 ? this.percentOfExploration - this.countPercentOfExploration() : this.percentOfExploration;
+    this.howManyDiedLastIteration = 0;
+    this.humans.forEach((human) => {
+      this.updateCosts(human);
+      human.hp = 100;
+      human.visitedTiles = [];
+      human.way = [];
+      this.getTileForHuman(human);
+      human.isAlive = true;
+      human.traps = [];
+    });
+    for (let i = 0 ; i < this.y ; i++ ) {
+      for (let j = 0 ; j < this.x ; j++) {
+        this.tiles[i][j].visited = false;
+      }
+    }
+    this.startSimulation(); 
+  }
+  countPercentOfExploration() {
+    return (this.agents/30)/100;
+  }
+  updateCosts(human) {
+    if (!human.isAlive) {
+      this.howManyDiedLastIteration += 1;
+    }
+    let index = human.way.length - 1;
+    let value = human.isAlive ? 100 : -500;
+    if (!human.isAlive) {
+      const tile = human.way[index];
+      human.way.pop();
+      tile.cost = tile.cost + value;
+      value = -100;
+      index = index - 1;
+    }
+    while (human.way.length > 0) {
+      const tile = human.way[index];
+      human.way.pop();
+      value = human.isAlive ? value - 2 : value + 2;
+      tile.cost = tile.cost + value;
+      index = index - 1;
+    }
+  }
+    
+
+
+  startSimulation() {
+    // this.humans.forEach((human) => {
+    //   human.visitedTiles.push(this.tiles[human.y][human.x]);
+    //   human.way.push(this.tiles[human.y][human.x]);
+    // });
+    const interval = setInterval(() => {
+      if (this.clearInterval) {
+        this.clearInterval = false;
+        clearInterval(interval);
+        this.startSimulation();
+      }
+      if (this.endOfIteration()) {
+        clearInterval(interval);
+        this.newIteration();
+      } else {
+        console.log(this.humans);
+        this.selectTile();
+        this.humans.forEach((human) => {
+          if (human.x !== this.x - 1 || human.y !== this.y - 1) {
+            human.changeHp(this.x, this.y);
+            this.checkIfYouAreDead(human);
+          }
+        });
+        this.refreshMaze();
+      }
+    }, this.time);
+  }
+  setTime(time) {
+    this.time = this.time + time;
+    this.clearInterval = true;
+  }
+  endOfIteration() {
+    let isEnd = true;
+    this.humans.forEach((human) => {
+      if ((human.x !== this.x - 1 || human.y !== this.y - 1) && human.isAlive) {
+        isEnd = false;
+      }
+    });
+    return isEnd;
   }
   selectTile() {
-    // console.log(this.tiles);
-    let possibleSelects = [];
-    const currentTile = this.tiles[this.human.y][this.human.x];
-    console.log('Tile before move',currentTile);
-    if (!currentTile.left) {
-      possibleSelects.push(this.tiles[this.human.y][this.human.x - 1]);
-    }
-    if (!currentTile.right) {
-      possibleSelects.push(this.tiles[this.human.y][this.human.x + 1]);
-    }
-    if (!currentTile.top) {
-      possibleSelects.push(this.tiles[this.human.y - 1][this.human.x]);
-    }
-    if (!currentTile.bottom) {
-      possibleSelects.push(this.tiles[this.human.y + 1][this.human.x]);
-    }
-    possibleSelects = this.sortPossibleSelects(possibleSelects);
-    console.log('array of possibleselects', possibleSelects);
-    let selectCompleted = false;
-    let possibleSelectsIterator = -1;
-    while (!selectCompleted) {
-      possibleSelectsIterator = possibleSelectsIterator + 1;
-      // console.log(possibleSelects, possibleSelectsIterator);
-      if (possibleSelectsIterator > possibleSelects.length - 1) {
-        break;
+    this.humans.forEach((human) => {
+      if ((human.x !== this.x - 1 || human.y !== this.y - 1) && human.isAlive ) {
+        let possibleSelects = [];
+        const currentTile = this.tiles[human.y][human.x];
+        if (!currentTile.right) {
+          possibleSelects.push(this.tiles[human.y][human.x + 1]);
+        }
+        if (!currentTile.bottom) {
+          possibleSelects.push(this.tiles[human.y + 1][human.x]);
+        }
+        if (!currentTile.left) {
+          possibleSelects.push(this.tiles[human.y][human.x - 1]);
+        }
+        if (!currentTile.top) {
+          possibleSelects.push(this.tiles[human.y - 1][human.x]);
+        }
+        const random = Math.random();
+        if (random <= this.percentOfExploration) {
+          possibleSelects = this.randomSortPossibleSelects(possibleSelects);
+        } else {
+          possibleSelects = this.sortPossibleSelects(possibleSelects);
+        }
+        let selectCompleted = false;
+        let possibleSelectsIterator = -1;
+        while (!selectCompleted) {
+          possibleSelectsIterator = possibleSelectsIterator + 1;
+          // console.log(possibleSelects, possibleSelectsIterator);
+          if (possibleSelectsIterator > possibleSelects.length - 1) {
+            break;
+          }
+          selectCompleted = this.checkIfItsVisited(human, possibleSelects[possibleSelectsIterator]);
+        }
+        if (selectCompleted) {
+          human.x = possibleSelects[possibleSelectsIterator].x;
+          human.y = possibleSelects[possibleSelectsIterator].y;
+          this.tiles[human.y][human.x].visited = true;
+          human.visitedTiles.push(possibleSelects[possibleSelectsIterator]);
+          human.way.push(possibleSelects[possibleSelectsIterator]);
+        } else {
+          human.traps.push(this.tiles[human.y][human.x]);
+          let goBack = human.visitedTiles.pop();
+          // console.log(human.visitedTiles, possibleSelects);
+          if (goBack.x === human.x && goBack.y === human.y) {
+            goBack = human.visitedTiles.pop();
+          }
+          human.x = goBack.x;
+          human.y = goBack.y;
+          human.visitedTiles.push(this.tiles[human.y][human.x]);
+          human.way.push(this.tiles[human.y][human.x]);
+        }
+        this.checkIfYouAreOnFood(human);
+        this.checkIfYouAreOnZombie(human);
       }
-      selectCompleted = this.checkIfItsVisited(this.human, possibleSelects[possibleSelectsIterator]);
-    }
-    if (selectCompleted) {
-      this.human.x = possibleSelects[possibleSelectsIterator].x;
-      this.human.y = possibleSelects[possibleSelectsIterator].y;
-      this.tiles[this.human.y][this.human.x].visited = true;
-      this.human.visitedTiles.push(possibleSelects[possibleSelectsIterator]);
-    } else {
-      this.tiles[this.human.y][this.human.x].trap = true;
-      let goBack = this.human.visitedTiles.pop();
-      if (goBack.x === this.human.x && goBack.y === this.human.y) {
-        goBack = this.human.visitedTiles.pop();
-      }
-      console.log('Go back: ', goBack);
-      this.human.x = goBack.x;
-      this.human.y = goBack.y;
-      this.human.visitedTiles.push(this.tiles[this.human.y][this.human.x]);
-    }
+    });
+  }
 
-    console.log("X,Y AFTER MOVE: ", this.tiles[this.human.y][this.human.x]);
+  checkIfYouAreDead(human) {
+    if (human.hp <= 0) {
+      human.isAlive = false;
+    }
+  }
+
+  randomSortPossibleSelects(possibleSelects) {
+    //console.log(possibleSelects);
+    // possibleSelects = possibleSelects.slice(0);
+    possibleSelects.sort(function(a, b) {
+      return 0.5 - Math.random();
+    });
+    console.log(possibleSelects);
+    return possibleSelects;
+  }
+  checkIfYouAreOnFood(human) {
+    this.foods.forEach((food) => {
+      if (human.x === food.x && human.y === food.y) {
+        this.humans.forEach((human) => {
+          human.hp = human.hp + 50 > 100 ? 100 : human.hp + 50;
+        });      
+      }
+    });
+  }
+  checkIfYouAreOnZombie(human) {
+   this.zombies.forEach((zombie) => {
+     if (human.x === zombie.x && human.y === zombie.y) {
+       human.isAlive = false;
+       human.hp = 0;
+     }
+   });
   }
   sortPossibleSelects(possibleSelects) {
     let byCost = possibleSelects.slice(0);
@@ -360,15 +547,24 @@ export class AppComponent implements AfterViewInit {
     return byCost;
   }
   checkIfItsVisited(human, possibleSelect) {
-    if (possibleSelect === undefined || possibleSelect.trap) {
+    if (possibleSelect === undefined || this.checkIfItsTrap(possibleSelect, human)) {
       return false;
     }
     let canBeVisited = true;
-    this.human.visitedTiles.forEach((tile) => {
-      if ((tile.x === possibleSelect.x && tile.y === possibleSelect.y) || !possibleSelect.visited) {
+    human.visitedTiles.forEach((tile) => {
+      if ((tile.x === possibleSelect.x && tile.y === possibleSelect.y)) {
         canBeVisited = false;
       }
     });
     return canBeVisited;
+  }
+  checkIfItsTrap(tile, human) {
+    let isTrap = false;
+    human.traps.forEach((trap) => {
+      if (trap.x === tile.x && trap.y === tile.y) {
+        isTrap = true;
+      }
+    });
+    return isTrap;
   }
 }
