@@ -25,6 +25,7 @@ export class AppComponent implements AfterViewInit {
   percentageOfZombie: any = 0.02;
   percentOfExploration = 1;
   time = 100;
+  gamma = 1;
   howManyDiedLastIteration = 0;
   clearInterval = false;
   simulation = false;
@@ -42,6 +43,10 @@ export class AppComponent implements AfterViewInit {
   start() {
     this.simulation = true;
     this.startSimulation();
+  }
+
+  changeGamma(value) {
+    this.gamma += value;
   }
 
   init() {
@@ -405,7 +410,7 @@ export class AppComponent implements AfterViewInit {
     if (!human.isAlive) {
       const tile = human.way[index];
       human.way.pop();
-      tile.cost = tile.cost + value;
+      tile.cost = tile.cost + (value * this.gamma);
       value = -100;
       index = index - 1;
     }
@@ -413,7 +418,7 @@ export class AppComponent implements AfterViewInit {
       const tile = human.way[index];
       human.way.pop();
       value = human.isAlive ? value - 2 : value + 2;
-      tile.cost = tile.cost + value;
+      tile.cost = tile.cost + (value * this.gamma);
       index = index - 1;
     }
   }
