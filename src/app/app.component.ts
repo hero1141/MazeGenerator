@@ -13,6 +13,7 @@ export class AppComponent implements AfterViewInit {
   @ViewChild('mazeCanvas') canvas;
   ctx;
   tiles = [];
+  showRewards = true;
   visitedStk = [];
   mazeSize = 40;
   x = 20;
@@ -323,9 +324,11 @@ export class AppComponent implements AfterViewInit {
       }
     });
     this.ctx.font = '10px Arial';
-    for (let i = 0; i < this.y; i++) {
-      for (let j = 0; j < this.x; j++) {
-        this.ctx.fillText(this.tiles[i][j].cost, this.mazeSize * this.tiles[i][j].x + 5, this.mazeSize * this.tiles[i][j].y + 25);
+    if (this.showRewards) {
+      for (let i = 0; i < this.y; i++) {
+        for (let j = 0; j < this.x; j++) {
+          this.ctx.fillText(this.tiles[i][j].cost, this.mazeSize * this.tiles[i][j].x + 5, this.mazeSize * this.tiles[i][j].y + 25);
+        }
       }
     }
     this.refreshFood();

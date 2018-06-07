@@ -34,15 +34,18 @@
       </h2>
       <h2>
         
-        <button (click)="setTime(10)" [disabled]="time > 1999" class="btn btn-success">Slower</button>
+        <button (click)="setTime(10)" [disabled]="time > 1999" class="btn btn-danger">Slower</button>
         Speed: {{ time }} ms
-        <button (click)="setTime(-10)" [disabled]="time < 20" class="btn btn-danger">Faster</button>
+        <button (click)="setTime(-10)" [disabled]="time < 20" class="btn btn-success">Faster</button>
       </h2>
       <h2>
         <button (click)="changeGamma(-0.1)" [disabled]="gamma <= 0.15" class="btn btn-danger">-</button>
         Gamma: {{gamma.toFixed(2)}}
         <button (click)="changeGamma(0.1)" [disabled]="gamma >= 1" class="btn btn-success">+</button>
       </h2> 
+      <h2>
+        Tiles Values: <button (click)="showRewards = !showRewards" class="{{showRewards ? 'btn btn-danger' : 'btn btn-success'}}">{{showRewards ? 'Hide' : 'Show'}}</button>
+      </h2>
       <h3>
         PercentageOfExploration: {{ (percentOfExploration  * 100).toFixed(2) }}%
       </h3>
@@ -63,8 +66,6 @@
         class="btn btn-lg btn-warning">
         Stop Simulation
       </button>
-      <h2>Visited Stack</h2>
-      {{howManyDiedLastIteration}}
     </div>
     <div class="col-md-8" style="margin-top:10px;">
       <div id="maze" style="width:500px;">
